@@ -36,7 +36,7 @@ func SpanWithIntAttribute(ctx context.Context, componentName string, spanName st
 func SpanWithPathAttribute(ctx context.Context, componentName string, spanName string, p path.Path) (context.Context, trace.Span) {
 	ctx, span := Span(ctx, componentName, spanName)
 	if span.IsRecording() {
-		span.SetAttributes(attribute.String("path", p.String()))
+		span.SetAttributes(PathAttribute(p))
 	}
 	return ctx, span
 }
@@ -56,27 +56,7 @@ func SpanWithCidAttribute(ctx context.Context, componentName string, spanName st
 func SpanWithCidListAttribute(ctx context.Context, componentName string, spanName string, cs []cid.Cid) (context.Context, trace.Span) {
 	ctx, span := Span(ctx, componentName, spanName)
 	if span.IsRecording() {
-		var value string
-		if len(cs) == 0 {
-			value = "empty list"
-		} else {
-			max := 3
-			if max > len(cs) {
-				max = len(cs)
-			}
-
-			cids := make([]string, max)
-			for i := range cids {
-				cids[i] = cs[i].String()
-			}
-
-			value = strings.Join(cids, ",")
-
-			if max < len(cs) {
-				value += fmt.Sprintf(" and %d more", len(cs)-max)
-			}
-		}
-		span.SetAttributes(attribute.String("cids", value))
+		span.SetAttributes(CidListAttribute(cs))
 	}
 	return ctx, span
 }
@@ -86,7 +66,7 @@ func SpanWithCidListAttribute(ctx context.Context, componentName string, spanNam
 func SpanWithBlockAttribute(ctx context.Context, componentName string, spanName string, b blocks.Block) (context.Context, trace.Span) {
 	ctx, span := Span(ctx, componentName, spanName)
 	if span.IsRecording() {
-		span.SetAttributes(attribute.String("block", b.Cid().String()))
+		span.SetAttributes(BlockAttribute(b))
 	}
 	return ctx, span
 }
@@ -96,27 +76,72 @@ func SpanWithBlockAttribute(ctx context.Context, componentName string, spanName 
 func SpanWithBlockListAttribute(ctx context.Context, componentName string, spanName string, bs []blocks.Block) (context.Context, trace.Span) {
 	ctx, span := Span(ctx, componentName, spanName)
 	if span.IsRecording() {
-		var value string
-		if len(bs) == 0 {
-			value = "empty list"
-		} else {
-			max := 3
-			if max > len(bs) {
-				max = len(bs)
-			}
-
-			cids := make([]string, max)
-			for i := range cids {
-				cids[i] = bs[i].Cid().String()
-			}
-
-			value = strings.Join(cids, ",")
-
-			if max < len(bs) {
-				value += fmt.Sprintf(" and %d more", len(bs)-max)
-			}
-			span.SetAttributes(attribute.String("blocks", value))
-		}
+		span.SetAttributes(BlockListAttribute(bs))
 	}
 	return ctx, span
+}
+
+// PathAttribute creates a span attribute with a standard name for representing a Path
+func PathAttribute(p path.Path) attribute.KeyValue {
+	return attribute.String("path", p.String())
+}
+
+// CidAttribute creates a span attribute with a standard name for representing a CID
+func CidAttribute(c cid.Cid) attribute.KeyValue {
+	return attribute.String("cid", c.String())
+}
+
+// CidListAttribute creates a span attribute with a standard name for representing a list of CIDs
+func CidListAttribute(cs []cid.Cid) attribute.KeyValue {
+	var value string
+	if len(cs) == 0 {
+		value = "empty list"
+	} else {
+		max := 3
+		if max > len(cs) {
+			max = len(cs)
+		}
+
+		cids := make([]string, max)
+		for i := range cids {
+			cids[i] = cs[i].String()
+		}
+
+		value = strings.Join(cids, ",")
+
+		if max < len(cs) {
+			value += fmt.Sprintf(" and %d more", len(cs)-max)
+		}
+	}
+	return attribute.String("cids", value)
+}
+
+// BlockAttribute creates a span attribute with a standard name for representing a block
+func BlockAttribute(b blocks.Block) attribute.KeyValue {
+	return attribute.String("block", b.Cid().String())
+}
+
+// BlockAttribute creates a span attribute with a standard name for representing a list of blocks
+func BlockListAttribute(bs []blocks.Block) attribute.KeyValue {
+	var value string
+	if len(bs) == 0 {
+		value = "empty list"
+	} else {
+		max := 3
+		if max > len(bs) {
+			max = len(bs)
+		}
+
+		cids := make([]string, max)
+		for i := range cids {
+			cids[i] = bs[i].Cid().String()
+		}
+
+		value = strings.Join(cids, ",")
+
+		if max < len(bs) {
+			value += fmt.Sprintf(" and %d more", len(bs)-max)
+		}
+	}
+	return attribute.String("blocks", value)
 }
